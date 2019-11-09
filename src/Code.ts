@@ -5,7 +5,7 @@ const todoistApiUrl = 'https://api.todoist.com/sync/v8/sync'
 function main() {
   let events = fetchEvents(calendarId)
   let inboxProjectId = fetchInboxProjectId()
-  postToTodoist(inboxProjectId, events)
+  return postToTodoist(inboxProjectId, events) ? 'Success' : 'Failed'
 }
 
 function fetchEvents(calendarId: string): GoogleAppsScript.Calendar.CalendarEvent[] {
@@ -42,7 +42,7 @@ function fetchInboxProjectId(): number {
   }
   return 0
 }
-function postToTodoist(todoistProjectId: number, events: GoogleAppsScript.Calendar.CalendarEvent[]) {
+function postToTodoist(todoistProjectId: number, events: GoogleAppsScript.Calendar.CalendarEvent[]): boolean {
   let commands = events.map(function(event) {
     return {
       'type': 'item_add',
@@ -68,4 +68,5 @@ function postToTodoist(todoistProjectId: number, events: GoogleAppsScript.Calend
 
   let response = UrlFetchApp.fetch(todoistApiUrl, options)
   Logger.log(response.getContentText())
+  return response.getResponseCode() == 200
 }
