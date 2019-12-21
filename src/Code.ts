@@ -3,13 +3,13 @@ const todoistApiToken: string = PropertiesService.getScriptProperties().getPrope
 const todoistApiUrl = 'https://api.todoist.com/sync/v8/sync'
 
 function main() {
-  let events = fetchEvents(calendarId)
-  let inboxProjectId = fetchInboxProjectId()
+  const events = fetchEvents(calendarId)
+  const inboxProjectId = fetchInboxProjectId()
   return postToTodoist(inboxProjectId, events) ? 'Success' : 'Failed'
 }
 
 function fetchEvents(calendarId: string): GoogleAppsScript.Calendar.CalendarEvent[] {
-  let cal = CalendarApp.getCalendarById(calendarId)
+  const cal = CalendarApp.getCalendarById(calendarId)
   return cal.getEventsForDay(new Date())
 }
 
@@ -22,7 +22,7 @@ type TodoistProjectsResponse = {
 }
 
 function fetchInboxProjectId(): number {
-  var options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     'method' : 'get',
     'payload' : JSON.stringify({
       'token': todoistApiToken,
@@ -33,9 +33,9 @@ function fetchInboxProjectId(): number {
       'content-type': 'application/json',
     }
   }
-  let response: TodoistProjectsResponse = JSON.parse(UrlFetchApp.fetch(todoistApiUrl, options).getContentText())
-  for (var i = 0; i < response['projects'].length; i++) {
-    let project = response['projects'][i]
+  const response: TodoistProjectsResponse = JSON.parse(UrlFetchApp.fetch(todoistApiUrl, options).getContentText())
+  for (let i = 0; i < response['projects'].length; i++) {
+    const project = response['projects'][i]
     if (project['inbox_project']) {
       return project.id
     }
@@ -43,7 +43,7 @@ function fetchInboxProjectId(): number {
   return 0
 }
 function postToTodoist(todoistProjectId: number, events: GoogleAppsScript.Calendar.CalendarEvent[]): boolean {
-  let commands = events.map(function(event) {
+  const commands = events.map(function(event) {
     return {
       'type': 'item_add',
       'uuid': Utilities.getUuid(),
@@ -54,11 +54,11 @@ function postToTodoist(todoistProjectId: number, events: GoogleAppsScript.Calend
       }
     }
   })
-  let payload = {
+  const payload = {
     'token': todoistApiToken,
     'commands': commands
   }
-  var options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     'method' : 'post',
     'payload' : JSON.stringify(payload),
     'headers': {
@@ -66,7 +66,7 @@ function postToTodoist(todoistProjectId: number, events: GoogleAppsScript.Calend
     }
   }
 
-  let response = UrlFetchApp.fetch(todoistApiUrl, options)
+  const response = UrlFetchApp.fetch(todoistApiUrl, options)
   Logger.log(response.getContentText())
   return response.getResponseCode() == 200
 }
