@@ -50,7 +50,10 @@ function postToTodoist_(todoistProjectId: number, events: GoogleAppsScript.Calen
       'temp_id': Utilities.getUuid(),
       'args': {
         'content': event.getTitle(),
-        'project_id': todoistProjectId
+        'project_id': todoistProjectId,
+        'due': {
+          'date': Utilities.formatDate(event.getEndTime(), 'Asia/Tokyo', 'yyyy-MM-dd')
+        }
       }
     }
   })
