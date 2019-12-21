@@ -2,23 +2,17 @@ const calendarId: string = PropertiesService.getScriptProperties().getProperty('
 const todoistApiToken: string = PropertiesService.getScriptProperties().getProperty('TODOIST_API_TOKEN');
 const todoistApiUrl = 'https://api.todoist.com/sync/v8/sync'
 
-function main() {
-  const events = fetchEvents_(calendarId)
-  const inboxProjectId = fetchInboxProjectId_()
-  return postToTodoist_(inboxProjectId, events) ? 'Success' : 'Failed'
-}
-
 function fetchEvents_(calendarId: string): GoogleAppsScript.Calendar.CalendarEvent[] {
   const cal = CalendarApp.getCalendarById(calendarId)
   return cal.getEventsForDay(new Date())
 }
 
 type TodoistProjectResponse = {
-  id: number,
-  inbox_project: boolean
+  id: number;
+  inbox_project: boolean;
 }
 type TodoistProjectsResponse = {
-  projects: [TodoistProjectResponse]
+  projects: [TodoistProjectResponse];
 }
 
 function fetchInboxProjectId_(): number {
@@ -72,4 +66,10 @@ function postToTodoist_(todoistProjectId: number, events: GoogleAppsScript.Calen
   const response = UrlFetchApp.fetch(todoistApiUrl, options)
   Logger.log(response.getContentText())
   return response.getResponseCode() == 200
+}
+
+function main(): string { /* eslint-disable-line @typescript-eslint/no-unused-vars */
+  const events = fetchEvents_(calendarId)
+  const inboxProjectId = fetchInboxProjectId_()
+  return postToTodoist_(inboxProjectId, events) ? 'Success' : 'Failed'
 }
