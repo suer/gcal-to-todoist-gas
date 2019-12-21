@@ -3,12 +3,12 @@ const todoistApiToken: string = PropertiesService.getScriptProperties().getPrope
 const todoistApiUrl = 'https://api.todoist.com/sync/v8/sync'
 
 function main() {
-  const events = fetchEvents(calendarId)
-  const inboxProjectId = fetchInboxProjectId()
-  return postToTodoist(inboxProjectId, events) ? 'Success' : 'Failed'
+  const events = fetchEvents_(calendarId)
+  const inboxProjectId = fetchInboxProjectId_()
+  return postToTodoist_(inboxProjectId, events) ? 'Success' : 'Failed'
 }
 
-function fetchEvents(calendarId: string): GoogleAppsScript.Calendar.CalendarEvent[] {
+function fetchEvents_(calendarId: string): GoogleAppsScript.Calendar.CalendarEvent[] {
   const cal = CalendarApp.getCalendarById(calendarId)
   return cal.getEventsForDay(new Date())
 }
@@ -21,7 +21,7 @@ type TodoistProjectsResponse = {
   projects: [TodoistProjectResponse]
 }
 
-function fetchInboxProjectId(): number {
+function fetchInboxProjectId_(): number {
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     'method' : 'get',
     'payload' : JSON.stringify({
@@ -42,7 +42,7 @@ function fetchInboxProjectId(): number {
   }
   return 0
 }
-function postToTodoist(todoistProjectId: number, events: GoogleAppsScript.Calendar.CalendarEvent[]): boolean {
+function postToTodoist_(todoistProjectId: number, events: GoogleAppsScript.Calendar.CalendarEvent[]): boolean {
   const commands = events.map(function(event) {
     return {
       'type': 'item_add',
