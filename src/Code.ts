@@ -2,9 +2,14 @@ const calendarId: string = PropertiesService.getScriptProperties().getProperty('
 const todoistApiToken: string = PropertiesService.getScriptProperties().getProperty('TODOIST_API_TOKEN');
 const todoistApiUrl = 'https://api.todoist.com/sync/v8/sync'
 
+function isSameDay_(a: GoogleAppsScript.Base.Date, b: Date): boolean {
+  return a.getFullYear() == b.getFullYear() && a.getMonth() == b.getMonth() && a.getDate() == b.getDate();
+}
+
 function fetchEvents_(calendarId: string): GoogleAppsScript.Calendar.CalendarEvent[] {
-  const cal = CalendarApp.getCalendarById(calendarId)
-  return cal.getEventsForDay(new Date())
+  const today = new Date();
+  const cal = CalendarApp.getCalendarById(calendarId);
+  return cal.getEventsForDay(new Date()).filter(e => isSameDay_(e.getStartTime(), today));
 }
 
 type TodoistProjectResponse = {
@@ -36,6 +41,10 @@ function fetchInboxProjectId_(): number {
   }
   return 0
 }
+function getDueDate_(event: GoogleAppsScript.Calendar.CalendarEvent): string {
+  const date = new Date(event.getEndTime().getTime() - 1);
+  return Utilities.formatDate(date, 'Asia/Tokyo', 'yyyy-MM-dd');
+}
 function postToTodoist_(todoistProjectId: number, events: GoogleAppsScript.Calendar.CalendarEvent[]): boolean {
   const commands = events.map(function(event) {
     return {
@@ -46,7 +55,7 @@ function postToTodoist_(todoistProjectId: number, events: GoogleAppsScript.Calen
         'content': event.getTitle(),
         'project_id': todoistProjectId,
         'due': {
-          'date': Utilities.formatDate(event.getEndTime(), 'Asia/Tokyo', 'yyyy-MM-dd')
+          'date': getDueDate_(event)
         }
       }
     }
