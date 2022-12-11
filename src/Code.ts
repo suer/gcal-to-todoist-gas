@@ -4,7 +4,7 @@ const calendarId: string = PropertiesService.getScriptProperties().getProperty(
 const todoistApiToken: string = PropertiesService.getScriptProperties().getProperty(
   'TODOIST_API_TOKEN'
 );
-const todoistApiUrl = 'https://api.todoist.com/sync/v8/sync';
+const todoistApiUrl = 'https://api.todoist.com/sync/v9/sync';
 
 function isSameDay_(a: GoogleAppsScript.Base.Date, b: Date): boolean {
   return (
