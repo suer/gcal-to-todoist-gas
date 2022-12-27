@@ -36,12 +36,12 @@ function fetchInboxProjectId_(): number {
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: 'get',
     payload: JSON.stringify({
-      token: todoistApiToken,
       sync_token: '*',
       resource_types: '["projects"]'
     }),
     headers: {
-      'content-type': 'application/json'
+      'content-type': 'application/json',
+      Authorization: `Bearer ${todoistApiToken}`
     }
   };
   const response: TodoistProjectsResponse = JSON.parse(
@@ -78,14 +78,14 @@ function postToTodoist_(
     };
   });
   const payload = {
-    token: todoistApiToken,
     commands: commands
   };
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: 'post',
     payload: JSON.stringify(payload),
     headers: {
-      'content-type': 'application/json'
+      'content-type': 'application/json',
+      Authorization: `Bearer ${todoistApiToken}`
     }
   };
 
