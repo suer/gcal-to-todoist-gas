@@ -57,6 +57,9 @@ function getDueDate_(event: GoogleAppsScript.Calendar.CalendarEvent): string {
   const date = new Date(event.getEndTime().getTime() - 1);
   return Utilities.formatDate(date, 'Asia/Tokyo', 'yyyy-MM-dd');
 }
+function removeHtmlTag_(htmlString: string): string {
+  return htmlString.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
+}
 function postToTodoist_(
   todoistProjectId: number,
   events: GoogleAppsScript.Calendar.CalendarEvent[],
@@ -72,6 +75,7 @@ function postToTodoist_(
         due: {
           date: getDueDate_(event),
         },
+        description: removeHtmlTag_(event.getDescription()),
       },
     };
   });
