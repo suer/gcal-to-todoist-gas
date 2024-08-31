@@ -13,7 +13,7 @@ build and push to GAS:
 
 ```
 $ npm install
-$ clasp create <Project Name>
+$ npx clasp create <Project Name>
 ```
 
 Edit .clasp.json to add `"rootDir": "src"`
@@ -22,8 +22,8 @@ open GAS project https://script.google.com/d/<ID>/edit
 (this URL will be shown following `clasp create`)
 
 ```
-$ clasp push
-$ clasp open
+$ npx clasp push
+$ npx clasp open
 ```
 
 and set `Script Properties`, then set trigger as `main`.
@@ -34,8 +34,8 @@ Create credentials for Google API.
 See https://github.com/google/clasp/blob/master/docs/run.md
 
 ```
-$ clasp push
-$ clasp run main
+$ npx clasp push
+$ npx clasp run main
 ```
 
 At first time, messages about permission error will be shown.
