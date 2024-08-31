@@ -5,7 +5,10 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src/**/*.ts"
+    "lint": "npm run lint:eslint && npm run lint:prettier",
+    "lint:eslint": "eslint \"src/**/*.ts\"",
+    "lint:prettier": "prettier --check \"src/**/*.ts\"",
+    "fix:prettier": "prettier --write \"src/**/*.ts\""
   },
   "keywords": [],
   "author": "",
