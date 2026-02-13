@@ -16,7 +16,7 @@
   "devDependencies": {
     "@types/google-apps-script": "1.0.7",
     "clasp": "^1.0.0",
-    "eslint": "^9.9.1",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
     "typescript": "^5.9.3",
