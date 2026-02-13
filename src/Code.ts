@@ -3,7 +3,7 @@ const calendarId: string =
 const todoistApiToken: string =
   PropertiesService.getScriptProperties().getProperty('TODOIST_API_TOKEN') ||
   '';
-const todoistApiUrl = 'https://api.todoist.com/api/v1';
+const todoistApiUrl = 'https://api.todoist.com/api/v1/sync';
 
 function isSameDay_(a: GoogleAppsScript.Base.Date, b: Date): boolean {
   return (
@@ -27,23 +27,27 @@ type TodoistProject = {
   id: string;
   inbox_project: boolean;
 };
-type TodoistProjectResponse = {
-  results: TodoistProject[];
+type TodoistProjectsResponse = {
+  projects: TodoistProject[];
 };
 
 function fetchInboxProjectId_(): string {
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: 'get',
+    method: 'post',
+    payload: {
+      sync_token: '*',
+      resource_types: JSON.stringify(['projects']),
+    },
     headers: {
       Authorization: `Bearer ${todoistApiToken}`,
     },
   };
-  const response: TodoistProjectResponse = JSON.parse(
-    UrlFetchApp.fetch(`${todoistApiUrl}/projects`, options).getContentText(),
+  const response: TodoistProjectsResponse = JSON.parse(
+    UrlFetchApp.fetch(todoistApiUrl, options).getContentText(),
   );
-  const results = response.results;
-  for (let i = 0; i < results.length; i++) {
-    const project = results[i];
+  const projects = response.projects;
+  for (let i = 0; i < projects.length; i++) {
+    const project = projects[i];
     if (project.inbox_project) {
       return project.id;
     }
@@ -61,31 +65,41 @@ function postToTodoist_(
   todoistProjectId: string,
   events: GoogleAppsScript.Calendar.CalendarEvent[],
 ): boolean {
-  let allSuccess = true;
-  events.forEach((event) => {
-    const payload = {
-      content: event.getTitle(),
-      project_id: todoistProjectId,
-      due_date: getDueDate_(event),
-      description: removeHtmlTag_(event.getDescription()),
-    };
-    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-      method: 'post',
-      payload: JSON.stringify(payload),
-      headers: {
-        'content-type': 'application/json',
-        Authorization: `Bearer ${todoistApiToken}`,
+  if (events.length === 0) {
+    return true;
+  }
+  const commands = events.map((event) => {
+    return {
+      type: 'item_add',
+      uuid: Utilities.getUuid(),
+      temp_id: Utilities.getUuid(),
+      args: {
+        content: event.getTitle(),
+        project_id: todoistProjectId,
+        due: {
+          date: getDueDate_(event),
+        },
+        description: removeHtmlTag_(event.getDescription()),
       },
-      muteHttpExceptions: true,
     };
-
-    const response = UrlFetchApp.fetch(`${todoistApiUrl}/tasks`, options);
-    if (response.getResponseCode() !== 200) {
-      Logger.log(`Failed to post task: ${response.getContentText()}`);
-      allSuccess = false;
-    }
   });
-  return allSuccess;
+  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+    method: 'post',
+    payload: {
+      commands: JSON.stringify(commands),
+    },
+    headers: {
+      Authorization: `Bearer ${todoistApiToken}`,
+    },
+    muteHttpExceptions: true,
+  };
+
+  const response = UrlFetchApp.fetch(todoistApiUrl, options);
+  if (response.getResponseCode() !== 200) {
+    Logger.log(`Failed to post tasks: ${response.getContentText()}`);
+    return false;
+  }
+  return true;
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
