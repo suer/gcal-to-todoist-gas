@@ -3,7 +3,7 @@ const calendarId: string =
 const todoistApiToken: string =
   PropertiesService.getScriptProperties().getProperty('TODOIST_API_TOKEN') ||
   '';
-const todoistApiUrl = 'https://api.todoist.com/sync/v9/sync';
+const todoistApiUrl = 'https://api.todoist.com/api/v1';
 
 function isSameDay_(a: GoogleAppsScript.Base.Date, b: Date): boolean {
   return (
@@ -23,36 +23,32 @@ function fetchEvents_(
     .filter((e) => isSameDay_(e.getStartTime(), today));
 }
 
-type TodoistProjectResponse = {
-  id: number;
+type TodoistProject = {
+  id: string;
   inbox_project: boolean;
-};
-type TodoistProjectsResponse = {
-  projects: [TodoistProjectResponse];
+}
+type TodoistProjectResponse = {
+  results: TodoistProject[]
 };
 
-function fetchInboxProjectId_(): number {
+function fetchInboxProjectId_(): string {
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: 'get',
-    payload: JSON.stringify({
-      sync_token: '*',
-      resource_types: '["projects"]',
-    }),
     headers: {
-      'content-type': 'application/json',
       Authorization: `Bearer ${todoistApiToken}`,
     },
   };
-  const response: TodoistProjectsResponse = JSON.parse(
-    UrlFetchApp.fetch(todoistApiUrl, options).getContentText(),
+  const response: TodoistProjectResponse = JSON.parse(
+    UrlFetchApp.fetch(`${todoistApiUrl}/projects`, options).getContentText(),
   );
-  for (let i = 0; i < response['projects'].length; i++) {
-    const project = response['projects'][i];
-    if (project['inbox_project']) {
+  const results = response.results;
+  for (let i = 0; i < results.length; i++) {
+    const project = results[i];
+    if (project.inbox_project) {
       return project.id;
     }
   }
-  return 0;
+  return '';
 }
 function getDueDate_(event: GoogleAppsScript.Calendar.CalendarEvent): string {
   const date = new Date(event.getEndTime().getTime() - 1);
@@ -62,44 +58,42 @@ function removeHtmlTag_(htmlString: string): string {
   return htmlString.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
 }
 function postToTodoist_(
-  todoistProjectId: number,
+  todoistProjectId: string,
   events: GoogleAppsScript.Calendar.CalendarEvent[],
 ): boolean {
-  const commands = events.map(function (event) {
-    return {
-      type: 'item_add',
-      uuid: Utilities.getUuid(),
-      temp_id: Utilities.getUuid(),
-      args: {
-        content: event.getTitle(),
-        project_id: todoistProjectId,
-        due: {
-          date: getDueDate_(event),
-        },
-        description: removeHtmlTag_(event.getDescription()),
-      },
+  let allSuccess = true;
+  events.forEach((event) => {
+    const payload = {
+      content: event.getTitle(),
+      project_id: todoistProjectId,
+      due_date: getDueDate_(event),
+      description: removeHtmlTag_(event.getDescription()),
     };
-  });
-  const payload = {
-    commands: commands,
-  };
-  const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    method: 'post',
-    payload: JSON.stringify(payload),
-    headers: {
-      'content-type': 'application/json',
-      Authorization: `Bearer ${todoistApiToken}`,
-    },
-  };
+    const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
+      method: 'post',
+      payload: JSON.stringify(payload),
+      headers: {
+        'content-type': 'application/json',
+        Authorization: `Bearer ${todoistApiToken}`,
+      },
+      muteHttpExceptions: true,
+    };
 
-  const response = UrlFetchApp.fetch(todoistApiUrl, options);
-  Logger.log(response.getContentText());
-  return response.getResponseCode() == 200;
+    const response = UrlFetchApp.fetch(`${todoistApiUrl}/tasks`, options);
+    if (response.getResponseCode() !== 200) {
+      Logger.log(`Failed to post task: ${response.getContentText()}`);
+      allSuccess = false;
+    }
+  });
+  return allSuccess;
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 function main(): string {
   const events = fetchEvents_(calendarId);
   const inboxProjectId = fetchInboxProjectId_();
+  if (!inboxProjectId) {
+    return 'Failed: Inbox project not found';
+  }
   return postToTodoist_(inboxProjectId, events) ? 'Success' : 'Failed';
 }
