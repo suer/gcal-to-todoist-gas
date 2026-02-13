@@ -11,7 +11,7 @@ You need to get following values before setting up
 
 build and push to GAS:
 
-```
+```sh
 $ npm install
 $ npx clasp login
 $ npx clasp create --title <Project Name> --rootDir dist
@@ -20,7 +20,7 @@ $ npx clasp create --title <Project Name> --rootDir dist
 open GAS project https://script.google.com/d/<ID>/edit
 (this URL will be shown following `clasp create`)
 
-```
+```sh
 $ npm run push
 $ npx clasp open-script
 ```
