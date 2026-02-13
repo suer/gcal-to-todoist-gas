@@ -6,6 +6,12 @@ updates:
       interval: "weekly"
       timezone: "Asia/Tokyo"
       day: "friday"
+    groups:
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "prettier"
 
   - package-ecosystem: "github-actions"
     directory: "/"
