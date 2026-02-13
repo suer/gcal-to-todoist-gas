@@ -26,9 +26,9 @@ function fetchEvents_(
 type TodoistProject = {
   id: string;
   inbox_project: boolean;
-}
+};
 type TodoistProjectResponse = {
-  results: TodoistProject[]
+  results: TodoistProject[];
 };
 
 function fetchInboxProjectId_(): string {
