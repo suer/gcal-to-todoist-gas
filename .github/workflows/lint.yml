@@ -9,21 +9,25 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    timeout-minutes: 3
     steps:
     - uses: actions/checkout@v6
     - name: Use Node.js
       uses: actions/setup-node@v6
       with:
         node-version-file: '/.node-version'
-    - name: npm install, lint
+        cache: 'npm'
+    - name: npm install, lint, and build
       run: |
         npm ci
-        npx eslint --max-warnings 0 src/**/*.ts
+        npm run lint
+        npm run build
       env:
         CI: true
-
