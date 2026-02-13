@@ -1,6 +1,6 @@
 # Google calendar to Todoist Google Apps Script
 
-
+A Google Apps Script to sync Google Calender schedules as Todoist tasks.
 
 ## Setting
 
