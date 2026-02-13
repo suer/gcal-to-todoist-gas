@@ -12,6 +12,7 @@ updates:
           - "eslint"
           - "eslint-*"
           - "prettier"
+          - "typescript-eslint"
 
   - package-ecosystem: "github-actions"
     directory: "/"
