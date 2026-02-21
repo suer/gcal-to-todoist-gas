@@ -9,6 +9,7 @@ updates:
     groups:
       eslint:
         patterns:
+          - "@eslint/*"
           - "eslint"
           - "eslint-*"
           - "prettier"
