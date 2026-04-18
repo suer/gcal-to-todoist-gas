@@ -59,7 +59,12 @@ function getDueDate_(event: GoogleAppsScript.Calendar.CalendarEvent): string {
   return Utilities.formatDate(date, 'Asia/Tokyo', 'yyyy-MM-dd');
 }
 function removeHtmlTag_(htmlString: string): string {
-  return htmlString.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
+  let previous;
+  do {
+    previous = htmlString;
+    htmlString = htmlString.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
+  } while (htmlString !== previous);
+  return htmlString;
 }
 function postToTodoist_(
   todoistProjectId: string,
