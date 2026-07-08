@@ -41,9 +41,15 @@ function fetchInboxProjectId_(): string {
     headers: {
       Authorization: `Bearer ${todoistApiToken}`,
     },
+    muteHttpExceptions: true,
   };
+  const httpResponse = UrlFetchApp.fetch(todoistApiUrl, options);
+  if (httpResponse.getResponseCode() !== 200) {
+    Logger.log(`Failed to fetch projects: ${httpResponse.getContentText()}`);
+    return '';
+  }
   const response: TodoistProjectsResponse = JSON.parse(
-    UrlFetchApp.fetch(todoistApiUrl, options).getContentText(),
+    httpResponse.getContentText(),
   );
   const projects = response.projects;
   for (let i = 0; i < projects.length; i++) {
