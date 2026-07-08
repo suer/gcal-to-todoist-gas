@@ -66,6 +66,13 @@ function removeHtmlTag_(htmlString: string): string {
   } while (htmlString !== previous);
   return htmlString;
 }
+type TodoistSyncStatus = Record<
+  string,
+  'ok' | { error_code: number; error: string }
+>;
+type TodoistSyncResponse = {
+  sync_status: TodoistSyncStatus;
+};
 function postToTodoist_(
   todoistProjectId: string,
   events: GoogleAppsScript.Calendar.CalendarEvent[],
@@ -102,6 +109,24 @@ function postToTodoist_(
   const response = UrlFetchApp.fetch(todoistApiUrl, options);
   if (response.getResponseCode() !== 200) {
     Logger.log(`Failed to post tasks: ${response.getContentText()}`);
+    return false;
+  }
+
+  const syncResponse: TodoistSyncResponse = JSON.parse(
+    response.getContentText(),
+  );
+  const failedCommands = commands.filter(
+    (command) => syncResponse.sync_status[command.uuid] !== 'ok',
+  );
+  if (failedCommands.length > 0) {
+    Logger.log(
+      `Failed to post some tasks: ${JSON.stringify(
+        failedCommands.map((command) => ({
+          content: command.args.content,
+          status: syncResponse.sync_status[command.uuid],
+        })),
+      )}`,
+    );
     return false;
   }
   return true;
