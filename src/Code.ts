@@ -7,19 +7,17 @@ const todoistApiUrl = 'https://api.todoist.com/api/v1/sync';
 
 function isSameDay_(a: GoogleAppsScript.Base.Date, b: Date): boolean {
   return (
-    a.getFullYear() == b.getFullYear() &&
-    a.getMonth() == b.getMonth() &&
-    a.getDate() == b.getDate()
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
   );
 }
 
-function fetchEvents_(
-  calendarId: string,
-): GoogleAppsScript.Calendar.CalendarEvent[] {
+function fetchEvents_(): GoogleAppsScript.Calendar.CalendarEvent[] {
   const today = new Date();
   const cal = CalendarApp.getCalendarById(calendarId);
   return cal
-    .getEventsForDay(new Date())
+    .getEventsForDay(today)
     .filter((e) => isSameDay_(e.getStartTime(), today));
 }
 
@@ -31,7 +29,7 @@ type TodoistProjectsResponse = {
   projects: TodoistProject[];
 };
 
-function fetchInboxProjectId_(): string {
+function fetchInboxProjectId_(): string | null {
   const options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     method: 'post',
     payload: {
@@ -46,23 +44,19 @@ function fetchInboxProjectId_(): string {
   const httpResponse = UrlFetchApp.fetch(todoistApiUrl, options);
   if (httpResponse.getResponseCode() !== 200) {
     Logger.log(`Failed to fetch projects: ${httpResponse.getContentText()}`);
-    return '';
+    return null;
   }
   const response: TodoistProjectsResponse = JSON.parse(
     httpResponse.getContentText(),
   );
-  const projects = response.projects;
-  for (let i = 0; i < projects.length; i++) {
-    const project = projects[i];
-    if (project.inbox_project) {
-      return project.id;
-    }
-  }
-  return '';
+  const inboxProject = response.projects.find((p) => p.inbox_project);
+  return inboxProject ? inboxProject.id : null;
 }
 function getDueDate_(event: GoogleAppsScript.Calendar.CalendarEvent): string {
+  // All-day events end at 00:00 of the following day, so subtract 1ms to
+  // land the due date on the event's actual last day.
   const date = new Date(event.getEndTime().getTime() - 1);
-  return Utilities.formatDate(date, 'Asia/Tokyo', 'yyyy-MM-dd');
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd');
 }
 function removeHtmlTag_(htmlString: string): string {
   let previous;
@@ -139,18 +133,21 @@ function postToTodoist_(
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-function main(): string {
+function main(): void {
   if (!calendarId) {
-    return 'Failed: CALENDAR_ID is not set';
+    throw new Error('CALENDAR_ID is not set');
   }
   if (!todoistApiToken) {
-    return 'Failed: TODOIST_API_TOKEN is not set';
+    throw new Error('TODOIST_API_TOKEN is not set');
   }
 
-  const events = fetchEvents_(calendarId);
   const inboxProjectId = fetchInboxProjectId_();
   if (!inboxProjectId) {
-    return 'Failed: Inbox project not found';
+    throw new Error('Inbox project not found');
   }
-  return postToTodoist_(inboxProjectId, events) ? 'Success' : 'Failed';
+
+  const events = fetchEvents_();
+  if (!postToTodoist_(inboxProjectId, events)) {
+    throw new Error('Failed to post tasks to Todoist');
+  }
 }
