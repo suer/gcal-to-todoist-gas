@@ -140,6 +140,13 @@ function postToTodoist_(
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 function main(): string {
+  if (!calendarId) {
+    return 'Failed: CALENDAR_ID is not set';
+  }
+  if (!todoistApiToken) {
+    return 'Failed: TODOIST_API_TOKEN is not set';
+  }
+
   const events = fetchEvents_(calendarId);
   const inboxProjectId = fetchInboxProjectId_();
   if (!inboxProjectId) {
